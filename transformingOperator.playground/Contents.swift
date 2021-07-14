@@ -50,6 +50,7 @@ struct User{
     let message : BehaviorSubject<String>
     
 }
+
 let bag3 = DisposeBag()
 
 let cuTy = User(message: BehaviorSubject(value: "Cu tý chào bạn"))
@@ -97,4 +98,63 @@ cuTe.message.onNext("Cu Tèo: What chu doing?")
 cuTi.message.onNext("Cu Tý: Counting balls")
 cuTi.message.onNext("Cu Tý: I Have 4 Ball")
 cuTe.message.onNext("Cu Tèo Can I have 1?")
+print("------------------")
+print("------------------")
+print("------------------")
 
+//observing events
+enum MyError: Error{
+    case anError
+}
+
+let bag5 = DisposeBag()
+let C1 = User(message: BehaviorSubject(value: "C1 chào bạn"))
+let C2 = User(message: BehaviorSubject(value: "C2 chào bạn"))
+let subject2 = PublishSubject<User>()
+let roomChat = subject2
+    .flatMapLatest{ $0.message.materialize() }
+roomChat.subscribe(onNext:{ msg in
+    print(msg)
+})
+.disposed(by: bag5)
+subject2.onNext(C1)
+C1.message.onNext("Tý A")
+C1.message.onNext("Tý B")
+C1.message.onNext("Tý C")
+
+C1.message.onError(MyError.anError)
+C1.message.onNext("Tý D")
+C1.message.onNext("Tý E")
+subject2.onNext(C2)
+C2.message.onNext("Tèo 1")
+C2.message.onNext("Tèo 2")
+print("------------------")
+
+
+let bag6 = DisposeBag()
+let C3 = User(message: BehaviorSubject(value: "C3 chào bạn"))
+let C4 = User(message: BehaviorSubject(value: "C4 chào bạn"))
+let subject3 = PublishSubject<User>()
+let roomChat2 = subject3
+    .flatMapLatest{ $0.message.materialize() }
+roomChat2.filter{
+    guard $0.error == nil else {
+        print("Lỗi phát sinh: \($0.error!)")
+        return false
+    }
+    return true
+}.dematerialize()
+.subscribe(onNext: { msg in
+    print(msg)
+}).disposed(by: bag6)
+subject3.onNext(C3)
+C3.message.onNext("Tý A")
+C3.message.onNext("Tý B")
+C3.message.onNext("Tý C")
+
+C3.message.onError(MyError.anError)
+C3.message.onNext("Tý D")
+C3.message.onNext("Tý E")
+subject3.onNext(C4)
+C4.message.onNext("Tèo 1")
+C4.message.onNext("Tèo 2")
